@@ -1,0 +1,7 @@
+frame_rate = 18
+start_length = 2
+outer_block_size = 20
+inner_block_size = 18
+outer_block_color = "DARKGREY"
+inner_block_color = "GREEN"
+food_color = "RED"

@@ -1,0 +1,2 @@
+class FoodPlacedInSnakeException(Exception):
+    pass
