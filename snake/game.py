@@ -17,10 +17,8 @@ class SnakeGame:
         snake_handler: SnakeHandler,
         food_handler: FoodHandler,
     ):
-        self._direction = Direction.RIGHT
-
         self._snake_handler = snake_handler
-
+        self._direction = Direction.RIGHT
         self._score = 0
         self._food_handler = food_handler
         self._food_handler.move_food_to_random_position()

@@ -7,6 +7,8 @@ from pygame.event import Event as PyEvent
 
 from snake.game_controls import Direction, PygameEventHandler
 
+INVALID_KEY = float("inf")
+
 
 class TestPygameEventHandler:
     def test_handle_events_for_quit_event(self):
@@ -26,15 +28,17 @@ class TestPygameEventHandler:
             ([PyEvent(KEYDOWN, key=K_LEFT)], Direction.LEFT),
             ([PyEvent(KEYDOWN, key=K_UP)], Direction.UP),
             ([PyEvent(KEYDOWN, key=K_DOWN)], Direction.DOWN),
+            ([PyEvent(KEYDOWN, key=INVALID_KEY)], None),
         ],
         ids=[
             "KEYDOWN event right key",
             "KEYDOWN event left key",
             "KEYDOWN event up key",
             "KEYDOWN event down key",
+            "Invalid KEYDOWN event",
         ],
     )
-    def test_get_updated_direction_for_keydown_event(
+    def test_get_updated_direction_for_key_down_event(
         self, fake_input_event: List[PyEvent], expected_direction: Direction
     ):
         with patch(target="snake.game_controls.get_pygame_events") as mocked_pygame_events:

@@ -34,7 +34,6 @@ class AbstractEventHandler(ABC):
         pass
 
 
-# ToDo: remove key exception when pressing any key!!
 class PygameEventHandler(AbstractEventHandler):
     def __init__(self):
         self._events = []
@@ -57,7 +56,8 @@ class PygameEventHandler(AbstractEventHandler):
     def _handle_user_input_events(self) -> None:
         for event in self._events:
             if event.type == PYGAME_KEYDOWN:
-                self._direction = self._event_key_registry[event.key]
+                value = self._event_key_registry.get(event.key)
+                self._direction = value or self._direction
 
     @property
     def _event_key_registry(self) -> Dict[int, Direction]:
