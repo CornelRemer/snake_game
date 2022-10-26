@@ -11,12 +11,12 @@ class GameUI:
     def __init__(
         self,
         window_config: WindowConfig,
-        snake_config: GameConfig,
+        game_config: GameConfig,
         snake_handler: SnakeHandler,
         food_handler: FoodHandler,
     ):
         self._window_config = window_config
-        self._snake_config = snake_config
+        self._game_config = game_config
         self._display = pygame.display.set_mode((window_config.width, window_config.height))
         self._clock = pygame.time.Clock()
         self._snake_handler = snake_handler
@@ -40,18 +40,18 @@ class GameUI:
             self._draw_square(
                 x=element.x,
                 y=element.y,
-                color=self._snake_config.outer_block_color,
-                size=self._snake_config.outer_block_size,
+                color=self._game_config.outer_block_color,
+                size=self._game_config.outer_block_size,
             )
             self._draw_square(
                 x=element.x + block_margin,
                 y=element.y + block_margin,
-                color=self._snake_config.inner_block_color,
-                size=self._snake_config.inner_block_size,
+                color=self._game_config.inner_block_color,
+                size=self._game_config.inner_block_size,
             )
 
     def _calculate_block_margin(self) -> int:
-        return abs(self._snake_config.outer_block_size - self._snake_config.inner_block_size) // 2
+        return abs(self._game_config.outer_block_size - self._game_config.inner_block_size) // 2
 
     def _draw_square(self, x: int, y: int, color: Tuple[int, int, int], size: int) -> None:
         pygame.draw.rect(surface=self._display, color=color, rect=pygame.Rect(x, y, size, size))
@@ -60,8 +60,8 @@ class GameUI:
         food_position = self._calculate_food_position_with_margin()
         self._draw_square(
             *food_position,
-            color=self._snake_config.food_color,
-            size=self._snake_config.inner_block_size,
+            color=self._game_config.food_color,
+            size=self._game_config.inner_block_size,
         )
 
     def _calculate_food_position_with_margin(self) -> Point:
@@ -75,4 +75,4 @@ class GameUI:
         self._display.blit(text, [0, 0])
 
     def update_clock(self) -> None:
-        self._clock.tick(self._snake_config.frame_rate)
+        self._clock.tick(self._game_config.frame_rate)

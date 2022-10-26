@@ -9,12 +9,12 @@ from snake.game_objects.objects import Food, FoodHandler, Point, Snake, SnakeHan
 
 
 class TestSnakeFactory:
-    def test_create_snake_returns_correct_type(self, window_config: WindowConfig, snake_config: GameConfig):
-        actual_snake = SnakeFactory(window_config=window_config, snake_config=snake_config).create_snake()
+    def test_create_snake_returns_correct_type(self, window_config: WindowConfig, game_config: GameConfig):
+        actual_snake = SnakeFactory(window_config=window_config, game_config=game_config).create_snake()
         assert isinstance(actual_snake, Snake)
 
-    def test_create_snake_returns_correct_snake(self, window_config: WindowConfig, snake_config: GameConfig):
-        actual_snake = SnakeFactory(window_config=window_config, snake_config=snake_config).create_snake()
+    def test_create_snake_returns_correct_snake(self, window_config: WindowConfig, game_config: GameConfig):
+        actual_snake = SnakeFactory(window_config=window_config, game_config=game_config).create_snake()
         expected_snake = Snake(head=Point(x=50, y=25), body=[Point(x=45, y=25), Point(x=40, y=25)], block_size=5)
         assert actual_snake == expected_snake
 
@@ -30,12 +30,12 @@ class TestSnakeHandlerFactory:
 
 
 class TestFoodFactory:
-    def test_create_food_returns_correct_type(self, window_config: WindowConfig, snake_config: GameConfig):
-        actual_food = FoodFactory(window_config=window_config, snake_config=snake_config).create_food()
+    def test_create_food_returns_correct_type(self, window_config: WindowConfig, game_config: GameConfig):
+        actual_food = FoodFactory(window_config=window_config, game_config=game_config).create_food()
         assert isinstance(actual_food, Food)
 
-    def test_create_food_returns_correct_food(self, window_config: WindowConfig, snake_config: GameConfig, food: Food):
-        actual_food = FoodFactory(window_config=window_config, snake_config=snake_config).create_food()
+    def test_create_food_returns_correct_food(self, window_config: WindowConfig, game_config: GameConfig, food: Food):
+        actual_food = FoodFactory(window_config=window_config, game_config=game_config).create_food()
         assert actual_food == food
 
 

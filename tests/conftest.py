@@ -26,8 +26,8 @@ def fixture_window_config() -> WindowConfig:
     )
 
 
-@pytest.fixture(name="snake_config")
-def fixture_snake_config() -> GameConfig:
+@pytest.fixture(name="game_config")
+def fixture_game_config() -> GameConfig:
     return GameConfig(
         frame_rate=2,
         start_length=2,
@@ -40,8 +40,8 @@ def fixture_snake_config() -> GameConfig:
 
 
 @pytest.fixture(name="food")
-def fixture_food(window_config: WindowConfig, snake_config: GameConfig) -> Food:
-    return Food(width=window_config.width, height=window_config.height, block_size=snake_config.outer_block_size)
+def fixture_food(window_config: WindowConfig, game_config: GameConfig) -> Food:
+    return Food(width=window_config.width, height=window_config.height, block_size=game_config.outer_block_size)
 
 
 @pytest.fixture(name="snake")

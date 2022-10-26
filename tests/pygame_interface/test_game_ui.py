@@ -11,14 +11,14 @@ class TestPyGameUI:
         self,
         _,
         window_config: WindowConfig,
-        snake_config: GameConfig,
+        game_config: GameConfig,
         snake_handler: SnakeHandler,
         food_handler: FoodHandler,
     ):
-        snake_config.frame_rate = 30
+        game_config.frame_rate = 30
         pygame_ui = GameUI(
             window_config=window_config,
-            snake_config=snake_config,
+            game_config=game_config,
             snake_handler=snake_handler,
             food_handler=food_handler,
         )
@@ -26,20 +26,20 @@ class TestPyGameUI:
         old_time = pygame_ui._clock.get_time()
         pygame_ui.update_clock()
         actual_time_delta = pygame_ui._clock.get_time() - old_time
-        expected_time_delta = 1_000 / snake_config.frame_rate
+        expected_time_delta = 1_000 / game_config.frame_rate
         assert actual_time_delta >= int(expected_time_delta * 0.95)
 
     def test_update_snake_food_and_text(
         self,
         _,
         window_config: WindowConfig,
-        snake_config: GameConfig,
+        game_config: GameConfig,
         snake_handler: SnakeHandler,
         food_handler: FoodHandler,
     ):
         pygame_ui = GameUI(
             window_config=window_config,
-            snake_config=snake_config,
+            game_config=game_config,
             snake_handler=snake_handler,
             food_handler=food_handler,
         )
@@ -48,8 +48,8 @@ class TestPyGameUI:
             pygame_ui.update_snake_food_and_text(score=test_score)
 
             head_size = 1
-            outer_block_count = head_size + snake_config.start_length
-            inner_block_count = head_size + snake_config.start_length
+            outer_block_count = head_size + game_config.start_length
+            inner_block_count = head_size + game_config.start_length
             food_count = 1
             expected_number_of_rectangles = outer_block_count + inner_block_count + food_count
 

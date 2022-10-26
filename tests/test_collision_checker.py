@@ -22,11 +22,11 @@ class TestCollisionChecker:
         ],
     )
     def test_collision_detected_with_window_boundaries(
-        self, test_snake: Snake, expected_collision: bool, window_config: WindowConfig, snake_config: GameConfig
+        self, test_snake: Snake, expected_collision: bool, window_config: WindowConfig, game_config: GameConfig
     ):
         snake_handler = SnakeHandler(snake=test_snake)
         collision_checker = CollisionChecker(
-            window_config=window_config, snake_config=snake_config, snake_handler=snake_handler
+            window_config=window_config, game_config=game_config, snake_handler=snake_handler
         )
         assert collision_checker.collision_detected() == expected_collision
 
@@ -48,10 +48,10 @@ class TestCollisionChecker:
         ],
     )
     def test_collision_detected_with_no_collision(
-        self, test_snake: Snake, expected_collision: bool, window_config: WindowConfig, snake_config: GameConfig
+        self, test_snake: Snake, expected_collision: bool, window_config: WindowConfig, game_config: GameConfig
     ):
         snake_handler = SnakeHandler(snake=test_snake)
         collision_checker = CollisionChecker(
-            window_config=window_config, snake_config=snake_config, snake_handler=snake_handler
+            window_config=window_config, game_config=game_config, snake_handler=snake_handler
         )
         assert collision_checker.collision_detected() == expected_collision
