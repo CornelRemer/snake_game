@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 
 from snake.config import GameConfig, WindowConfig
-from snake.game import SnakeGame
+from snake.game import SnakeGame, SnakeGameFactory
 from snake.game_controls import Direction
 from snake.game_objects.objects import Food, FoodHandler, Point, Snake, SnakeHandler
 
@@ -146,3 +146,16 @@ class TestSnakeGame:
             game.run()
 
             assert game.get_score() == 1
+
+
+@patch("snake.game.GameUI")
+class TestSnakeGameFactory:
+    def test_create_snake_game_has_correct_type(
+        self,
+        _,
+        window_config: WindowConfig,
+        game_config: GameConfig,
+    ):
+        factory = SnakeGameFactory(window_configuration=window_config, game_configuration=game_config)
+
+        assert isinstance(factory.create_snake_game(), SnakeGame)

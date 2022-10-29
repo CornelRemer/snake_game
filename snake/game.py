@@ -6,6 +6,12 @@ from snake.collision_checker import CollisionChecker
 from snake.config import GameConfig, WindowConfig
 from snake.exceptions import FoodPlacedInSnakeException
 from snake.game_controls import Direction
+from snake.game_objects.factories import (
+    FoodFactory,
+    FoodHandlerFactory,
+    SnakeFactory,
+    SnakeHandlerFactory,
+)
 from snake.game_objects.objects import FoodHandler, Point, SnakeHandler
 from snake.pygame_interface.game_ui import GameUI
 
@@ -97,3 +103,25 @@ class SnakeGame:
 
     def get_snake(self) -> List[Point]:
         return self._snake_handler.get_snake()
+
+
+class SnakeGameFactory:
+    def __init__(self, window_configuration: WindowConfig, game_configuration: GameConfig):
+        self._window_config = window_configuration
+        self._game_config = game_configuration
+
+    def create_snake_game(self) -> SnakeGame:
+        return SnakeGame(
+            window_config=self._window_config,
+            game_config=self._game_config,
+            snake_handler=SnakeHandlerFactory(
+                snake=SnakeFactory(
+                    window_config=self._window_config,
+                    game_config=self._game_config,
+                ).create_snake()
+            ).create_snake_handler(),
+            food_handler=FoodHandlerFactory(
+                food=FoodFactory(window_config=self._window_config, game_config=self._game_config).create_food(),
+                window_config=self._window_config,
+            ).create_food_handler(),
+        )

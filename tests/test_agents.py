@@ -6,9 +6,9 @@ import pytest
 
 from snake.agents import UserAgent
 from snake.config import GameConfig, WindowConfig
-from snake.game import SnakeGame
+from snake.game import SnakeGameFactory
 from snake.game_controls import AbstractEventHandler, Direction
-from snake.game_objects.objects import FoodHandler, Point, SnakeHandler
+from snake.game_objects.objects import Point
 
 
 class FakeEvents(Enum):
@@ -43,6 +43,11 @@ class FakeEventHandler(AbstractEventHandler):
         return self._quit_game
 
 
+@pytest.fixture(name="snake_game_factory")
+def fixture_snake_game_factory(window_config: WindowConfig, game_config: GameConfig) -> SnakeGameFactory:
+    return SnakeGameFactory(window_configuration=window_config, game_configuration=game_config)
+
+
 @pytest.fixture(name="fake_event_handler")
 def fixture_fake_event_handler() -> FakeEventHandler:
     return FakeEventHandler()
@@ -69,19 +74,9 @@ class TestUserAgent:
         _,
         users_input: str,
         expected_answer: bool,
-        window_config: WindowConfig,
-        game_config: GameConfig,
-        snake_handler: SnakeHandler,
-        food_handler: FoodHandler,
         fake_event_handler: FakeEventHandler,
+        snake_game_factory: SnakeGameFactory,
     ):
-        game = SnakeGame(
-            window_config=window_config,
-            game_config=game_config,
-            snake_handler=snake_handler,
-            food_handler=food_handler,
-        )
-
         fake_event = [FakeEvents.QUIT]
         fake_event_handler.add_test_events(fake_event)
 
@@ -89,7 +84,7 @@ class TestUserAgent:
             patch("snake.agents.PygameEventHandler", return_value=fake_event_handler),
             patch("snake.agents.input", return_value=users_input),
         ):
-            agent = UserAgent(game=game, window_configuration=window_config, game_configuration=game_config)
+            agent = UserAgent(game_factory=snake_game_factory)
             agent.play_game()
 
             assert agent.wants_to_play() == expected_answer
@@ -122,48 +117,28 @@ class TestUserAgent:
         quit_game: bool,
         users_input: str,
         expected_answer: bool,
-        window_config: WindowConfig,
-        game_config: GameConfig,
-        snake_handler: SnakeHandler,
-        food_handler: FoodHandler,
+        snake_game_factory: SnakeGameFactory,
     ):
-        game = SnakeGame(
-            window_config=window_config,
-            game_config=game_config,
-            snake_handler=snake_handler,
-            food_handler=food_handler,
-        )
-
         with (
             patch("snake.agents.SnakeGame.is_over", return_value=game_is_over),
             patch("snake.agents.PygameEventHandler.quit_game", return_value=quit_game),
             patch("snake.agents.input", return_value=users_input),
         ):
-            agent = UserAgent(game=game, window_configuration=window_config, game_configuration=game_config)
+            agent = UserAgent(game_factory=snake_game_factory)
 
             assert agent.wants_to_play() == expected_answer
 
     def test_restart_game(
         self,
         _,
-        window_config: WindowConfig,
-        game_config: GameConfig,
-        snake_handler: SnakeHandler,
-        food_handler: FoodHandler,
+        snake_game_factory: SnakeGameFactory,
     ):
-        game = SnakeGame(
-            window_config=window_config,
-            game_config=game_config,
-            snake_handler=snake_handler,
-            food_handler=food_handler,
-        )
-
         with (
             patch("snake.agents.SnakeGame.is_over", return_value=True),
             patch("snake.agents.input", return_value="n"),
             patch("snake.agents.UserAgent.restart_game") as mocked_restart_game,
         ):
-            agent = UserAgent(game=game, window_configuration=window_config, game_configuration=game_config)
+            agent = UserAgent(game_factory=snake_game_factory)
             agent.play_game()
 
             assert not agent.wants_to_play()
@@ -172,25 +147,13 @@ class TestUserAgent:
     def test_reset_game(
         self,
         _,
-        window_config: WindowConfig,
-        game_config: GameConfig,
-        snake_handler: SnakeHandler,
-        food_handler: FoodHandler,
+        snake_game_factory: SnakeGameFactory,
     ):
-        game = SnakeGame(
-            window_config=window_config,
-            game_config=game_config,
-            snake_handler=snake_handler,
-            food_handler=food_handler,
-        )
+        with patch("snake.agents.SnakeGameFactory.create_snake_game") as mocked_create_snake_game:
+            agent = UserAgent(game_factory=snake_game_factory)
+            agent.restart_game()
 
-        agent = UserAgent(game=game, window_configuration=window_config, game_configuration=game_config)
-
-        assert game == agent.game
-
-        agent.restart_game()
-
-        assert game != agent.game
+            assert mocked_create_snake_game.call_count == 2
 
     @pytest.mark.integration
     @pytest.mark.parametrize(
@@ -211,25 +174,15 @@ class TestUserAgent:
     def test_play_game_with_user_input_moves_snake_correctly(
         self,
         _,
-        window_config: WindowConfig,
-        game_config: GameConfig,
-        fake_event_handler: FakeEventHandler,
-        snake_handler: SnakeHandler,
-        food_handler: FoodHandler,
         input_event: List[Optional[FakeEvents]],
         expected_snake: List[Point],
+        fake_event_handler: FakeEventHandler,
+        snake_game_factory: SnakeGameFactory,
     ):
         fake_event_handler.add_test_events(input_event)
 
-        game = SnakeGame(
-            window_config=window_config,
-            game_config=game_config,
-            snake_handler=snake_handler,
-            food_handler=food_handler,
-        )
-
         with patch("snake.agents.PygameEventHandler", return_value=fake_event_handler):
-            agent = UserAgent(game=game, window_configuration=window_config, game_configuration=game_config)
+            agent = UserAgent(game_factory=snake_game_factory)
             agent.play_game()
 
             assert agent.get_snake() == expected_snake
@@ -253,26 +206,16 @@ class TestUserAgent:
     def test_play_game_with_user_input_does_not_move_snake_to_opposite_direction(
         self,
         _,
-        window_config: WindowConfig,
-        game_config: GameConfig,
-        fake_event_handler: FakeEventHandler,
-        snake_handler: SnakeHandler,
-        food_handler: FoodHandler,
         initial_direction: List[Optional[FakeEvents]],
         updated_direction: List[Optional[FakeEvents]],
         expected_snake: List[Point],
+        fake_event_handler: FakeEventHandler,
+        snake_game_factory: SnakeGameFactory,
     ):
         fake_event_handler.add_test_events(initial_direction)
 
-        game = SnakeGame(
-            window_config=window_config,
-            game_config=game_config,
-            snake_handler=snake_handler,
-            food_handler=food_handler,
-        )
-
         with patch("snake.agents.PygameEventHandler", return_value=fake_event_handler):
-            agent = UserAgent(game=game, window_configuration=window_config, game_configuration=game_config)
+            agent = UserAgent(game_factory=snake_game_factory)
 
             agent.play_game()
             fake_event_handler.add_test_events(updated_direction)
@@ -284,26 +227,16 @@ class TestUserAgent:
     def test_run_snake_movement_for_multiple_inputs(
         self,
         _,
-        window_config: WindowConfig,
-        game_config: GameConfig,
         fake_event_handler: FakeEventHandler,
-        snake_handler: SnakeHandler,
-        food_handler: FoodHandler,
+        snake_game_factory: SnakeGameFactory,
     ):
         fake_events = [None, None, Direction.DOWN, None, Direction.LEFT, FakeEvents.QUIT]
-
-        game = SnakeGame(
-            window_config=window_config,
-            game_config=game_config,
-            snake_handler=snake_handler,
-            food_handler=food_handler,
-        )
 
         with (
             patch("snake.agents.PygameEventHandler", return_value=fake_event_handler),
             patch("snake.agents.input", return_value="n"),
         ):
-            agent = UserAgent(game=game, window_configuration=window_config, game_configuration=game_config)
+            agent = UserAgent(game_factory=snake_game_factory)
 
             for fake_event in fake_events:
                 fake_event_handler.add_test_events([fake_event])

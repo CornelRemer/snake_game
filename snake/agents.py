@@ -1,22 +1,12 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List
 
-from snake.config import GameConfig, WindowConfig
-from snake.game import SnakeGame
+from snake.game import SnakeGame, SnakeGameFactory
 from snake.game_controls import PygameEventHandler
-from snake.game_objects.factories import (
-    FoodFactory,
-    FoodHandlerFactory,
-    SnakeFactory,
-    SnakeHandlerFactory,
-)
 from snake.game_objects.objects import Point
 
 
 class AbstractAgent(ABC):
-    def __init__(self, game: SnakeGame):
-        self._game = game
-
     @abstractmethod
     def play_game(self) -> None:
         pass
@@ -30,11 +20,10 @@ class AbstractAgent(ABC):
 
 
 class UserAgent(AbstractAgent):
-    def __init__(self, game: SnakeGame, window_configuration: WindowConfig, game_configuration: GameConfig):
-        self._window_config = window_configuration
-        self._game_config = game_configuration
+    def __init__(self, game_factory: SnakeGameFactory):
+        self._game_factory = game_factory
+        self._game = self._game_factory.create_snake_game()
         self._event_handler = PygameEventHandler()
-        super().__init__(game)
 
     def play_game(self) -> None:
         self._gather_user_input_and_set_new_direction()
@@ -46,20 +35,7 @@ class UserAgent(AbstractAgent):
         self._game.update_direction(new_direction)
 
     def restart_game(self) -> None:
-        self._game = SnakeGame(
-            window_config=self._window_config,
-            game_config=self._game_config,
-            snake_handler=SnakeHandlerFactory(
-                snake=SnakeFactory(
-                    window_config=self._window_config,
-                    game_config=self._game_config,
-                ).create_snake()
-            ).create_snake_handler(),
-            food_handler=FoodHandlerFactory(
-                food=FoodFactory(window_config=self._window_config, game_config=self._game_config).create_food(),
-                window_config=self._window_config,
-            ).create_food_handler(),
-        )
+        self._game = self._game_factory.create_snake_game()
 
     def wants_to_play(self) -> bool:
         if self._game.is_over() or self._event_handler.quit_game():
