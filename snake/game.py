@@ -92,9 +92,6 @@ class SnakeGame:
         self._ui.update_snake_food_and_text(score=self._score)
         self._ui.update_clock()
 
-    def is_not_over(self):
-        return not self.is_over()
-
     def is_over(self) -> bool:
         return self._game_over
 
