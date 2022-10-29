@@ -11,6 +11,9 @@ start:     ## start game
 test:     ## run all tests
 	poetry run pytest tests
 
+integration-test:     ## run all tests marked as 'integration'
+	poetry run pytest -m integration tests
+
 static-check: \
 	black \
 	isort \

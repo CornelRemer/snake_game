@@ -1,10 +1,12 @@
+from typing import List, Optional
+
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
 
 from snake.collision_checker import CollisionChecker
 from snake.config import GameConfig, WindowConfig
 from snake.exceptions import FoodPlacedInSnakeException
-from snake.game_controls import Direction, PygameEventHandler
-from snake.game_objects.objects import FoodHandler, SnakeHandler
+from snake.game_controls import Direction
+from snake.game_objects.objects import FoodHandler, Point, SnakeHandler
 from snake.pygame_interface.game_ui import GameUI
 
 
@@ -13,7 +15,7 @@ class SnakeGame:
     def __init__(
         self,
         window_config: WindowConfig,
-        snake_config: GameConfig,
+        game_config: GameConfig,
         snake_handler: SnakeHandler,
         food_handler: FoodHandler,
     ):
@@ -23,27 +25,23 @@ class SnakeGame:
         self._food_handler = food_handler
         self._food_handler.move_food_to_random_position()
         self._collision_checker = CollisionChecker(
-            window_config=window_config, snake_config=snake_config, snake_handler=snake_handler
+            window_config=window_config, game_config=game_config, snake_handler=snake_handler
         )
-        self._event_handler = PygameEventHandler()
 
         self._ui = GameUI(
             window_config=window_config,
-            snake_config=snake_config,
+            game_config=game_config,
             snake_handler=snake_handler,
             food_handler=food_handler,
         )
         self._game_over = False
 
     def run(self):
-        self._gather_user_input_and_set_new_direction()
         self._move_snake_and_check_for_collision()
         self._handle_snake_reached_food()
         self._update_ui()
 
-    def _gather_user_input_and_set_new_direction(self) -> None:
-        self._event_handler.handle_events()
-        new_direction = self._event_handler.get_updated_direction()
+    def update_direction(self, new_direction: Optional[Direction]):
         if new_direction and self._is_no_opposite_direction(new_direction):
             self._direction = new_direction
 
@@ -92,7 +90,10 @@ class SnakeGame:
         return not self.is_over()
 
     def is_over(self) -> bool:
-        return self._game_over or self._event_handler.quit_game()
+        return self._game_over
 
     def get_score(self) -> int:
         return self._score
+
+    def get_snake(self) -> List[Point]:
+        return self._snake_handler.get_snake()
