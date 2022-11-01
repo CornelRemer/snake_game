@@ -13,17 +13,25 @@ from snake.game_objects.factories import (
     SnakeHandlerFactory,
 )
 from snake.game_objects.objects import FoodHandler, Point, SnakeHandler
+from snake.publisher import (
+    AbstractPublisher,
+    AbstractSubscriber,
+    Publisher,
+    PublisherEvents,
+)
 from snake.pygame_interface.game_ui import GameUI
 
 
 class SnakeGame:
     # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         window_config: WindowConfig,
         game_config: GameConfig,
         snake_handler: SnakeHandler,
         food_handler: FoodHandler,
+        publisher: AbstractPublisher,
     ):
         self._snake_handler = snake_handler
         self._direction = Direction.RIGHT
@@ -41,6 +49,7 @@ class SnakeGame:
             food_handler=food_handler,
         )
         self._game_over = False
+        self._publisher = publisher
 
     def run(self):
         self._move_snake_and_check_for_collision()
@@ -61,11 +70,13 @@ class SnakeGame:
         self._snake_handler.move_snake(self._direction)
         if self._collision_checker.collision_detected():
             self._game_over = True
+            self._publisher.publish_one_event(PublisherEvents.COLLISION_DETECTED)
 
     def _handle_snake_reached_food(self) -> None:
         if self._snake_reached_food():
             self._score += 1
             self._extend_snake_and_place_new_food()
+            self._publisher.publish_one_event(PublisherEvents.REACHED_FOOD)
 
     def _snake_reached_food(self) -> bool:
         return self._snake_handler.head == self._food_handler.get_current_food_position()
@@ -101,6 +112,9 @@ class SnakeGame:
     def get_snake(self) -> List[Point]:
         return self._snake_handler.get_snake()
 
+    def add_subscriber(self, subscriber: AbstractSubscriber):
+        self._publisher.add_subscriber(subscriber)
+
 
 class SnakeGameFactory:
     def __init__(self, window_configuration: WindowConfig, game_configuration: GameConfig):
@@ -121,4 +135,5 @@ class SnakeGameFactory:
                 food=FoodFactory(window_config=self._window_config, game_config=self._game_config).create_food(),
                 window_config=self._window_config,
             ).create_food_handler(),
+            publisher=Publisher(),
         )

@@ -21,5 +21,5 @@ if __name__ == "__main__":
         while agent.wants_to_play():
             agent.play_game()
 
-        # score = game.get_score()
-        # print("Score", score)
+        score = agent.get_score()
+        print("Score", score)

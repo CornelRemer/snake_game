@@ -128,23 +128,23 @@ class TestUserAgent:
 
             assert agent.wants_to_play() == expected_answer
 
-    def test_restart_game(
+    def test_restart_game_gets_called_if_agent_wants_to_play_again(
         self,
         _,
         snake_game_factory: SnakeGameFactory,
     ):
         with (
             patch("snake.agents.SnakeGame.is_over", return_value=True),
-            patch("snake.agents.input", return_value="n"),
+            patch("snake.agents.input", return_value="y"),
             patch("snake.agents.UserAgent.restart_game") as mocked_restart_game,
         ):
             agent = UserAgent(game_factory=snake_game_factory)
             agent.play_game()
 
-            assert not agent.wants_to_play()
+            assert agent.wants_to_play()
             assert mocked_restart_game.call_count == 1
 
-    def test_reset_game(
+    def test_reset_game_creates_new_game_instance(
         self,
         _,
         snake_game_factory: SnakeGameFactory,

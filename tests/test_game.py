@@ -7,14 +7,17 @@ from snake.config import GameConfig, WindowConfig
 from snake.game import SnakeGame, SnakeGameFactory
 from snake.game_controls import Direction
 from snake.game_objects.objects import Food, FoodHandler, Point, Snake, SnakeHandler
+from snake.publisher import PublisherEvents, ScoreSubscriber
+from tests.fake_classes import FakePublisher, FakeSubscriber
 
 
 @pytest.fixture(name="snake_game")
-def fixture_test_game(
+def fixture_snake_game(
     window_config: WindowConfig,
     game_config: GameConfig,
     snake_handler: SnakeHandler,
     food_handler: FoodHandler,
+    fake_publisher: FakePublisher,
 ) -> SnakeGame:
     with patch("snake.game.GameUI"):
         return SnakeGame(
@@ -22,6 +25,7 @@ def fixture_test_game(
             game_config=game_config,
             snake_handler=snake_handler,
             food_handler=food_handler,
+            publisher=fake_publisher,
         )
 
 
@@ -108,6 +112,7 @@ class TestSnakeGame:
         game_config: GameConfig,
         snake_handler: SnakeHandler,
         food_handler: FoodHandler,
+        fake_publisher: FakePublisher,
     ):
         with patch("snake.game.CollisionChecker.collision_detected", return_value=True):
             game = SnakeGame(
@@ -115,16 +120,41 @@ class TestSnakeGame:
                 game_config=game_config,
                 snake_handler=snake_handler,
                 food_handler=food_handler,
+                publisher=fake_publisher,
             )
             game.run()
 
             assert game.is_over()
+
+    def test_run_publishes_event_on_collision(
+        self,
+        _,
+        window_config: WindowConfig,
+        game_config: GameConfig,
+        snake_handler: SnakeHandler,
+        food_handler: FoodHandler,
+        fake_publisher: FakePublisher,
+        fake_subscriber: FakeSubscriber,
+    ):
+        with patch("snake.game.CollisionChecker.collision_detected", return_value=True):
+            game = SnakeGame(
+                window_config=window_config,
+                game_config=game_config,
+                snake_handler=snake_handler,
+                food_handler=food_handler,
+                publisher=fake_publisher,
+            )
+            game.add_subscriber(fake_subscriber)
+            game.run()
+
+            assert fake_publisher.all_events == [PublisherEvents.COLLISION_DETECTED]
 
     def test_run_increases_score_when_snake_reaches_food(
         self,
         _,
         window_config: WindowConfig,
         game_config: GameConfig,
+        fake_publisher: FakePublisher,
     ):
         snake = Snake(head=Point(x=50, y=25), body=[Point(x=45, y=25), Point(x=40, y=25)], block_size=5)
         snake_handler = SnakeHandler(snake=snake)
@@ -140,12 +170,64 @@ class TestSnakeGame:
                 game_config=game_config,
                 snake_handler=snake_handler,
                 food_handler=food_handler,
+                publisher=fake_publisher,
             )
             assert game.get_score() == 0
 
             game.run()
 
             assert game.get_score() == 1
+
+    def test_run_publishes_event_when_snake_reaches_food(
+        self,
+        _,
+        window_config: WindowConfig,
+        game_config: GameConfig,
+        fake_publisher: FakePublisher,
+        fake_subscriber: FakeSubscriber,
+    ):
+        snake = Snake(head=Point(x=50, y=25), body=[Point(x=45, y=25), Point(x=40, y=25)], block_size=5)
+        snake_handler = SnakeHandler(snake=snake)
+
+        food = Food(width=55, height=25, block_size=game_config.outer_block_size)
+        food_handler = FoodHandler(food=food, window_config=window_config)
+
+        with patch("snake.game.FoodHandler.move_food_to_random_position"), patch(
+            "snake.game.SnakeGame._place_new_food"
+        ):
+            game = SnakeGame(
+                window_config=window_config,
+                game_config=game_config,
+                snake_handler=snake_handler,
+                food_handler=food_handler,
+                publisher=fake_publisher,
+            )
+            game.add_subscriber(fake_subscriber)
+            game.run()
+
+            assert fake_publisher.all_events == [PublisherEvents.REACHED_FOOD]
+
+    def test_add_subscriber(
+        self,
+        _,
+        window_config: WindowConfig,
+        game_config: GameConfig,
+        snake_handler: SnakeHandler,
+        food_handler: FoodHandler,
+        fake_publisher: FakePublisher,
+    ):
+        publisher = fake_publisher
+        game = SnakeGame(
+            window_config=window_config,
+            game_config=game_config,
+            snake_handler=snake_handler,
+            food_handler=food_handler,
+            publisher=publisher,
+        )
+        subscriber = ScoreSubscriber({"score": 0})
+        game.add_subscriber(subscriber)
+
+        assert publisher.subscribers == [subscriber]
 
 
 @patch("snake.game.GameUI")

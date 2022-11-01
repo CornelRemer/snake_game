@@ -6,6 +6,7 @@ import pytest
 from snake.colors import RGBColorCode
 from snake.config import GameConfig, WindowConfig
 from snake.game_objects.objects import Food, FoodHandler, Point, Snake, SnakeHandler
+from tests.fake_classes import FakePublisher, FakeSubscriber
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -57,3 +58,13 @@ def fixture_snake_handler(snake: Snake) -> SnakeHandler:
 @pytest.fixture(name="food_handler")
 def fixture_food_handler(food: Food, window_config: WindowConfig) -> FoodHandler:
     return FoodHandler(food=food, window_config=window_config)
+
+
+@pytest.fixture(name="fake_publisher")
+def fixture_fake_publisher() -> FakePublisher:
+    return FakePublisher()
+
+
+@pytest.fixture(name="fake_subscriber")
+def fixture_fake_subscriber() -> FakeSubscriber:
+    return FakeSubscriber()
