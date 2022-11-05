@@ -33,6 +33,12 @@ def fixture_snake_game(
 class TestSnakeGame:
     # pylint: disable=too-many-arguments
 
+    def test_run_sets_game_over_on_max_game_iteration(self, _, snake_game: SnakeGame):
+        with patch("snake.game.SnakeGame._move_snake_and_check_for_collision"):
+            for _ in range(301):
+                snake_game.run()
+            assert snake_game.is_over()
+
     @pytest.mark.parametrize(
         "input_direction, expected_snake",
         (

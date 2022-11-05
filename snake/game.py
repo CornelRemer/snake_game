@@ -21,6 +21,8 @@ from snake.publisher import (
 )
 from snake.pygame_interface.game_ui import GameUI
 
+MAX_GAME_ITERATION = 100
+
 
 class SnakeGame:
     # pylint: disable=too-many-instance-attributes
@@ -50,11 +52,19 @@ class SnakeGame:
         )
         self._game_over = False
         self._publisher = publisher
+        self._game_iteration_count = 0
 
     def run(self):
+        self._check_max_game_iteration()
         self._move_snake_and_check_for_collision()
         self._handle_snake_reached_food()
         self._update_ui()
+
+    def _check_max_game_iteration(self) -> None:
+        if self._game_iteration_count >= MAX_GAME_ITERATION * len(self.get_snake()):
+            self._game_over = True
+        else:
+            self._game_iteration_count += 1
 
     def update_direction(self, new_direction: Optional[Direction]):
         if new_direction and self._is_no_opposite_direction(new_direction):
