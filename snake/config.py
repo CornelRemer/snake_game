@@ -45,6 +45,7 @@ class WindowConfig:
 
 @dataclass
 class GameConfig:
+    # pylint: disable=too-many-instance-attributes
     FRAME_RATE_VALIDATOR = Validator("frame_rate", is_type_of=int, gt=0, must_exist=True)
     START_LENGTH_VALIDATOR = Validator("start_length", is_type_of=int, gt=0, must_exist=True)
     OUTER_BLOCK_SIZE_VALIDATOR = Validator("outer_block_size", is_type_of=int, gt=0, must_exist=True)
@@ -56,6 +57,8 @@ class GameConfig:
         "inner_block_color", is_type_of=str, is_in=RGBColorCode.get_color_names(), default="LIGHTBLUE"
     )
     FOOD_COLOR_VALIDATOR = Validator("food_color", is_type_of=str, is_in=RGBColorCode.get_color_names(), default="RED")
+    AGENT_TYPE_VALIDATOR = Validator("agent_type", is_type_of=str, is_in=["USER", "AI"], default="AI")
+
     frame_rate: int
     start_length: int
     outer_block_size: int
@@ -63,6 +66,7 @@ class GameConfig:
     outer_block_color: Tuple[int, int, int]
     inner_block_color: Tuple[int, int, int]
     food_color: Tuple[int, int, int]
+    agent_type: str
 
     @staticmethod
     def from_dynaconf() -> GameConfig:
@@ -74,6 +78,7 @@ class GameConfig:
             outer_block_color=cast(Tuple[int, int, int], RGBColorCode[settings.get("outer_block_color")].value),
             inner_block_color=cast(Tuple[int, int, int], RGBColorCode[settings.get("inner_block_color")].value),
             food_color=cast(Tuple[int, int, int], RGBColorCode[settings.get("food_color")].value),
+            agent_type=settings.get("agent_type"),
         )
 
     @classmethod
@@ -86,4 +91,5 @@ class GameConfig:
             cls.OUTER_BLOCK_COLOR_VALIDATOR,
             cls.INNER_BLOCK_COLOR_VALIDATOR,
             cls.FOOD_COLOR_VALIDATOR,
+            cls.AGENT_TYPE_VALIDATOR,
         ]
