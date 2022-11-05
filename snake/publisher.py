@@ -39,6 +39,36 @@ class ScoreSubscriber(AbstractSubscriber):
         return self._subscribed_events[event]
 
 
+class RewardSubscriber(AbstractSubscriber):
+    def __init__(self, state: Dict[str, int]):
+        self._state = state
+
+    def get_notified(self, event: PublisherEvents) -> None:
+        if self._subscribed(event):
+            handler = self._get_handler_for_event(event)
+            handler()
+
+    def _subscribed(self, event: PublisherEvents) -> bool:
+        return event in self._subscribed_events
+
+    @property
+    def _subscribed_events(self) -> Dict[PublisherEvents, Callable]:
+        return {
+            PublisherEvents.REACHED_FOOD: self._increase_score_and_reward,
+            PublisherEvents.COLLISION_DETECTED: self._decrease_reward,
+        }
+
+    def _increase_score_and_reward(self) -> None:
+        self._state["score"] += 1
+        self._state["reward"] += 50
+
+    def _decrease_reward(self) -> None:
+        self._state["reward"] -= 10
+
+    def _get_handler_for_event(self, event: PublisherEvents) -> Callable:
+        return self._subscribed_events[event]
+
+
 class AbstractPublisher(ABC):
     @abstractmethod
     def add_subscriber(self, subscriber: AbstractSubscriber) -> None:

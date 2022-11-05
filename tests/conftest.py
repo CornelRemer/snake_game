@@ -37,6 +37,7 @@ def fixture_game_config() -> GameConfig:
         outer_block_color=cast(Tuple[int, int, int], RGBColorCode["DARKGREY"].value),
         inner_block_color=cast(Tuple[int, int, int], RGBColorCode["GREEN"].value),
         food_color=cast(Tuple[int, int, int], RGBColorCode["RED"].value),
+        agent_type="USER",
     )
 
 

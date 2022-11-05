@@ -115,6 +115,10 @@ class SnakeGame:
     def add_subscriber(self, subscriber: AbstractSubscriber):
         self._publisher.add_subscriber(subscriber)
 
+    @property
+    def current_direction(self) -> Direction:
+        return self._direction
+
 
 class SnakeGameFactory:
     def __init__(self, window_configuration: WindowConfig, game_configuration: GameConfig):

@@ -2,7 +2,12 @@ from typing import Dict
 
 import pytest
 
-from snake.publisher import Publisher, PublisherEvents, ScoreSubscriber
+from snake.publisher import (
+    Publisher,
+    PublisherEvents,
+    RewardSubscriber,
+    ScoreSubscriber,
+)
 from tests.fake_classes import FakeSubscriber
 
 
@@ -31,6 +36,22 @@ class TestScoreSubscriber:
     def test_got_notified_handles_events_correctly(self, event: PublisherEvents, expected_state: Dict[str, int]):
         state = {"score": 0}
         subscriber = ScoreSubscriber(state)
+
+        subscriber.get_notified(event)
+        assert state == expected_state
+
+
+class TestRewardSubscriber:
+    @pytest.mark.parametrize(
+        "event, expected_state",
+        (
+            (PublisherEvents.REACHED_FOOD, {"score": 1, "reward": 50}),
+            (PublisherEvents.COLLISION_DETECTED, {"score": 0, "reward": -10}),
+        ),
+    )
+    def test_got_notified_handles_events_correctly(self, event: PublisherEvents, expected_state: Dict[str, int]):
+        state = {"score": 0, "reward": 0}
+        subscriber = RewardSubscriber(state)
 
         subscriber.get_notified(event)
         assert state == expected_state

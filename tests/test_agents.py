@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from snake.agents import UserAgent
+from snake.agents import Actions, AIAgent, UserAgent
 from snake.config import GameConfig, WindowConfig
 from snake.game import SnakeGameFactory
 from snake.game_controls import AbstractEventHandler, Direction
@@ -188,42 +188,6 @@ class TestUserAgent:
             assert agent.get_snake() == expected_snake
 
     @pytest.mark.integration
-    @pytest.mark.parametrize(
-        "initial_direction, updated_direction, expected_snake",
-        (
-            ([FakeEvents.RIGHT], [FakeEvents.LEFT], [Point(x=60, y=25), Point(x=55, y=25), Point(x=50, y=25)]),
-            ([FakeEvents.LEFT], [FakeEvents.RIGHT], [Point(x=60, y=25), Point(x=55, y=25), Point(x=50, y=25)]),
-            ([FakeEvents.UP], [FakeEvents.DOWN], [Point(x=50, y=15), Point(x=50, y=20), Point(x=50, y=25)]),
-            ([FakeEvents.DOWN], [FakeEvents.UP], [Point(x=50, y=35), Point(x=50, y=30), Point(x=50, y=25)]),
-        ),
-        ids=[
-            "initial direction right, updated direction left -> snake must not change direction.",
-            "initial direction left, updated direction right -> snake must not change direction.",
-            "initial direction up, updated direction down -> snake must not change direction.",
-            "initial direction down, updated direction up -> snake must not change direction.",
-        ],
-    )
-    def test_play_game_with_user_input_does_not_move_snake_to_opposite_direction(
-        self,
-        _,
-        initial_direction: List[Optional[FakeEvents]],
-        updated_direction: List[Optional[FakeEvents]],
-        expected_snake: List[Point],
-        fake_event_handler: FakeEventHandler,
-        snake_game_factory: SnakeGameFactory,
-    ):
-        fake_event_handler.add_test_events(initial_direction)
-
-        with patch("snake.agents.PygameEventHandler", return_value=fake_event_handler):
-            agent = UserAgent(game_factory=snake_game_factory)
-
-            agent.play_game()
-            fake_event_handler.add_test_events(updated_direction)
-            agent.play_game()
-
-            assert agent.get_snake() == expected_snake
-
-    @pytest.mark.integration
     def test_run_snake_movement_for_multiple_inputs(
         self,
         _,
@@ -244,3 +208,111 @@ class TestUserAgent:
 
             assert agent.get_snake() == [Point(x=80, y=25), Point(x=75, y=25), Point(x=70, y=25)]
             assert not agent.wants_to_play()
+
+
+@patch("snake.game.GameUI")
+class TestAIAgent:
+    # pylint: disable=too-many-arguments
+    def test_play_game_handles_user_input_on_game_end(
+        self,
+        _,
+        fake_event_handler: FakeEventHandler,
+        snake_game_factory: SnakeGameFactory,
+    ):
+        fake_event = [FakeEvents.QUIT]
+        fake_event_handler.add_test_events(fake_event)
+
+        with patch("snake.agents.PygameEventHandler", return_value=fake_event_handler):
+            agent = AIAgent(game_factory=snake_game_factory)
+            agent.play_game()
+
+            assert not agent.wants_to_play()
+
+    @pytest.mark.parametrize(
+        "game_is_over, expected_answer",
+        (
+            (True, True),
+            (False, True),
+        ),
+    )
+    def test_wants_to_play(
+        self,
+        _,
+        game_is_over: bool,
+        expected_answer: bool,
+        snake_game_factory: SnakeGameFactory,
+    ):
+        with patch("snake.agents.SnakeGame.is_over", return_value=game_is_over):
+            agent = AIAgent(game_factory=snake_game_factory)
+
+            assert agent.wants_to_play() == expected_answer
+
+    def test_restart_game_gets_called_if_agent_wants_to_play_again(
+        self,
+        _,
+        snake_game_factory: SnakeGameFactory,
+    ):
+        with (
+            patch("snake.agents.SnakeGame.is_over", return_value=True),
+            patch("snake.agents.AIAgent.restart_game") as mocked_restart_game,
+        ):
+            agent = AIAgent(game_factory=snake_game_factory)
+            agent.play_game()
+
+            assert agent.wants_to_play()
+            assert mocked_restart_game.call_count == 1
+
+    def test_reset_game_creates_new_game_instance(
+        self,
+        _,
+        snake_game_factory: SnakeGameFactory,
+    ):
+        with patch("snake.agents.SnakeGameFactory.create_snake_game") as mocked_create_snake_game:
+            agent = AIAgent(game_factory=snake_game_factory)
+            agent.restart_game()
+
+            assert mocked_create_snake_game.call_count == 2
+
+    @pytest.mark.integration
+    @pytest.mark.parametrize(
+        "action, new_direction, expected_snake",
+        (
+            (Actions.STRAIGHT, Direction.RIGHT, [Point(x=55, y=25), Point(x=50, y=25), Point(x=45, y=25)]),
+            (Actions.RIGHT_TURN, Direction.DOWN, [Point(x=50, y=30), Point(x=50, y=25), Point(x=45, y=25)]),
+            (Actions.LEFT_TURN, Direction.UP, [Point(x=50, y=20), Point(x=50, y=25), Point(x=45, y=25)]),
+        ),
+        ids=[
+            "Initial direction is 'right' (default), action is 'straight' hence new direction will remain 'right.",
+            "Initial direction is 'right' (default), action is 'right_turn' hence new direction will change to 'down'.",
+            "Initial direction is 'right' (default), action is 'left_turn' hence new direction will remain 'left'.",
+        ],
+    )
+    def test_play_game_converts_action_correctly_into_directions(
+        self,
+        _,
+        action: Actions,
+        new_direction: Direction,
+        expected_snake: List[Point],
+        snake_game_factory: SnakeGameFactory,
+    ):
+        with patch("snake.agents.AIAgent._get_actions", return_value=action):
+            agent = AIAgent(game_factory=snake_game_factory)
+            assert agent.game.current_direction == Direction.RIGHT
+            agent.play_game()
+            assert agent.game.current_direction == new_direction
+            assert agent.get_snake() == expected_snake
+
+    @pytest.mark.integration
+    def test_run_snake_movement_for_multiple_inputs(
+        self,
+        _,
+        snake_game_factory: SnakeGameFactory,
+    ):
+        actions = [Actions.STRAIGHT, Actions.RIGHT_TURN, Actions.STRAIGHT, Actions.LEFT_TURN, Actions.STRAIGHT]
+        agent = AIAgent(game_factory=snake_game_factory)
+
+        for action in actions:
+            with patch("snake.agents.AIAgent._get_actions", return_value=action):
+                agent.play_game()
+
+        assert agent.get_snake() == [Point(x=65, y=35), Point(x=60, y=35), Point(x=55, y=35)]
