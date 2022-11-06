@@ -11,28 +11,10 @@ from snake.publisher import PublisherEvents, ScoreSubscriber
 from tests.fake_classes import FakePublisher, FakeSubscriber
 
 
-@pytest.fixture(name="snake_game")
-def fixture_snake_game(
-    window_config: WindowConfig,
-    game_config: GameConfig,
-    snake_handler: SnakeHandler,
-    food_handler: FoodHandler,
-    fake_publisher: FakePublisher,
-) -> SnakeGame:
-    with patch("snake.game.GameUI"):
-        return SnakeGame(
-            window_config=window_config,
-            game_config=game_config,
-            snake_handler=snake_handler,
-            food_handler=food_handler,
-            publisher=fake_publisher,
-        )
-
-
 @patch("snake.game.GameUI")
 class TestSnakeGame:
     # pylint: disable=too-many-arguments
-
+    # pylint: disable=duplicate-code
     def test_run_sets_game_over_on_max_game_iteration(self, _, snake_game: SnakeGame):
         with patch("snake.game.SnakeGame._move_snake_and_check_for_collision"):
             for _ in range(301):
@@ -111,26 +93,10 @@ class TestSnakeGame:
 
         assert snake_handler.get_snake() == [Point(x=60, y=40), Point(x=60, y=35), Point(x=60, y=30)]
 
-    def test_run_quits_game_on_collision(
-        self,
-        _,
-        window_config: WindowConfig,
-        game_config: GameConfig,
-        snake_handler: SnakeHandler,
-        food_handler: FoodHandler,
-        fake_publisher: FakePublisher,
-    ):
+    def test_run_quits_game_on_collision(self, _, snake_game: SnakeGame):
         with patch("snake.game.CollisionChecker.collision_detected", return_value=True):
-            game = SnakeGame(
-                window_config=window_config,
-                game_config=game_config,
-                snake_handler=snake_handler,
-                food_handler=food_handler,
-                publisher=fake_publisher,
-            )
-            game.run()
-
-            assert game.is_over()
+            snake_game.run()
+            assert snake_game.is_over()
 
     def test_run_publishes_event_on_collision(
         self,

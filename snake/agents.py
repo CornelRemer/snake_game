@@ -140,7 +140,7 @@ class AIAgent(AbstractAgent):
 
     def _convert_actions_to_directions(self, action: Actions) -> Direction:
         clock_wise_directions = [Direction.RIGHT, Direction.DOWN, Direction.LEFT, Direction.UP]
-        idx = clock_wise_directions.index(self._game.current_direction)
+        idx = clock_wise_directions.index(self._game.get_current_direction())
         if np.array_equal(action.value, Actions.STRAIGHT.value):
             new_direction = clock_wise_directions[idx]
         elif np.array_equal(action.value, Actions.RIGHT_TURN.value):

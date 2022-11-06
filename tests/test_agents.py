@@ -297,9 +297,9 @@ class TestAIAgent:
     ):
         with patch("snake.agents.AIAgent._get_actions", return_value=action):
             agent = AIAgent(game_factory=snake_game_factory)
-            assert agent.game.current_direction == Direction.RIGHT
+            assert agent.game.get_current_direction() == Direction.RIGHT
             agent.play_game()
-            assert agent.game.current_direction == new_direction
+            assert agent.game.get_current_direction() == new_direction
             assert agent.get_snake() == expected_snake
 
     @pytest.mark.integration

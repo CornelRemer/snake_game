@@ -1,5 +1,5 @@
 from snake.config import GameConfig, WindowConfig
-from snake.game_objects.objects import SnakeHandler
+from snake.game_objects.objects import Point, SnakeHandler
 
 
 class CollisionChecker:
@@ -9,31 +9,30 @@ class CollisionChecker:
         self._snake_handler = snake_handler
 
     def collision_detected(self) -> bool:
-        return self._snake_bites_itself() or self._snake_hits_window_boundary()
+        snake_head = self._snake_handler.head
+        return self._snake_bites_itself() or self._collision_between_point_and_window_boundary(point=snake_head)
 
     def _snake_bites_itself(self) -> bool:
         return self._snake_handler.snake_bites_itself()
 
-    def _snake_hits_window_boundary(self) -> bool:
+    def _collision_between_point_and_window_boundary(self, point: Point) -> bool:
         return (
-            self._snake_hit_top()
-            or self._snake_hit_bottem()
-            or self._snake_hit_left_side()
-            or self._snake_hit_right_side()
+            self.point_top_collision(point=point)
+            or self.point_bottem_collision(point=point)
+            or self.point_left_boundary_collision(point=point)
+            or self.point_right_boundary_collision(point=point)
         )
 
-    def _snake_hit_top(self) -> bool:
-        snake_head = self._snake_handler.head
-        return snake_head.y < 0
+    @staticmethod
+    def point_top_collision(point: Point) -> bool:
+        return point.y < 0
 
-    def _snake_hit_bottem(self) -> bool:
-        snake_head = self._snake_handler.head
-        return snake_head.y > self._window_config.height - self._game_config.outer_block_size
+    def point_bottem_collision(self, point: Point) -> bool:
+        return point.y > self._window_config.height - self._game_config.outer_block_size
 
-    def _snake_hit_left_side(self) -> bool:
-        snake_head = self._snake_handler.head
-        return snake_head.x < 0
+    @staticmethod
+    def point_left_boundary_collision(point: Point) -> bool:
+        return point.x < 0
 
-    def _snake_hit_right_side(self) -> bool:
-        snake_head = self._snake_handler.head
-        return snake_head.x > self._window_config.width - self._game_config.outer_block_size
+    def point_right_boundary_collision(self, point: Point) -> bool:
+        return point.x > self._window_config.width - self._game_config.outer_block_size

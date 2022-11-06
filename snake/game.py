@@ -78,9 +78,12 @@ class SnakeGame:
 
     def _move_snake_and_check_for_collision(self) -> None:
         self._snake_handler.move_snake(self._direction)
-        if self._collision_checker.collision_detected():
+        if self.collision_detected():
             self._game_over = True
             self._publisher.publish_one_event(PublisherEvents.COLLISION_DETECTED)
+
+    def collision_detected(self) -> bool:
+        return self._collision_checker.collision_detected()
 
     def _handle_snake_reached_food(self) -> None:
         if self._snake_reached_food():
@@ -122,11 +125,16 @@ class SnakeGame:
     def get_snake(self) -> List[Point]:
         return self._snake_handler.get_snake()
 
+    def get_food(self) -> Point:
+        return self._food_handler.get_current_food_position()
+
+    def get_collision_checker(self) -> CollisionChecker:
+        return self._collision_checker
+
     def add_subscriber(self, subscriber: AbstractSubscriber):
         self._publisher.add_subscriber(subscriber)
 
-    @property
-    def current_direction(self) -> Direction:
+    def get_current_direction(self) -> Direction:
         return self._direction
 
 

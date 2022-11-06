@@ -1,10 +1,12 @@
 from typing import Tuple, cast
+from unittest.mock import patch
 
 import pygame
 import pytest
 
 from snake.colors import RGBColorCode
 from snake.config import GameConfig, WindowConfig
+from snake.game import SnakeGame
 from snake.game_objects.objects import Food, FoodHandler, Point, Snake, SnakeHandler
 from tests.fake_classes import FakePublisher, FakeSubscriber
 
@@ -69,3 +71,21 @@ def fixture_fake_publisher() -> FakePublisher:
 @pytest.fixture(name="fake_subscriber")
 def fixture_fake_subscriber() -> FakeSubscriber:
     return FakeSubscriber()
+
+
+@pytest.fixture(name="snake_game")
+def fixture_snake_game(
+    window_config: WindowConfig,
+    game_config: GameConfig,
+    snake_handler: SnakeHandler,
+    food_handler: FoodHandler,
+    fake_publisher: FakePublisher,
+) -> SnakeGame:
+    with patch("snake.game.GameUI"):
+        return SnakeGame(
+            window_config=window_config,
+            game_config=game_config,
+            snake_handler=snake_handler,
+            food_handler=food_handler,
+            publisher=fake_publisher,
+        )
