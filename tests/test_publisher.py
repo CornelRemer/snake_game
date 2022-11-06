@@ -30,28 +30,28 @@ class TestPublisher:
 
 class TestScoreSubscriber:
     @pytest.mark.parametrize(
-        "event, expected_state",
+        "event, expected_remuneration",
         ((PublisherEvents.REACHED_FOOD, {"score": 1}), (PublisherEvents.COLLISION_DETECTED, {"score": 0})),
     )
-    def test_got_notified_handles_events_correctly(self, event: PublisherEvents, expected_state: Dict[str, int]):
-        state = {"score": 0}
-        subscriber = ScoreSubscriber(state)
+    def test_got_notified_handles_events_correctly(self, event: PublisherEvents, expected_remuneration: Dict[str, int]):
+        remuneration = {"score": 0}
+        subscriber = ScoreSubscriber(remuneration)
 
         subscriber.get_notified(event)
-        assert state == expected_state
+        assert remuneration == expected_remuneration
 
 
 class TestRewardSubscriber:
     @pytest.mark.parametrize(
-        "event, expected_state",
+        "event, expected_remuneration",
         (
             (PublisherEvents.REACHED_FOOD, {"score": 1, "reward": 50}),
             (PublisherEvents.COLLISION_DETECTED, {"score": 0, "reward": -10}),
         ),
     )
-    def test_got_notified_handles_events_correctly(self, event: PublisherEvents, expected_state: Dict[str, int]):
-        state = {"score": 0, "reward": 0}
-        subscriber = RewardSubscriber(state)
+    def test_got_notified_handles_events_correctly(self, event: PublisherEvents, expected_remuneration: Dict[str, int]):
+        remuneration = {"score": 0, "reward": 0}
+        subscriber = RewardSubscriber(remuneration)
 
         subscriber.get_notified(event)
-        assert state == expected_state
+        assert remuneration == expected_remuneration

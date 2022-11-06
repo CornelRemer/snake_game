@@ -15,8 +15,8 @@ class AbstractSubscriber(ABC):
 
 
 class ScoreSubscriber(AbstractSubscriber):
-    def __init__(self, state: Dict[str, int]):
-        self._state = state
+    def __init__(self, remuneration: Dict[str, int]):
+        self._remuneration = remuneration
 
     def get_notified(self, event: PublisherEvents) -> None:
         if self._subscribed(event):
@@ -29,19 +29,19 @@ class ScoreSubscriber(AbstractSubscriber):
     @property
     def _subscribed_events(self) -> Dict[PublisherEvents, Callable]:
         return {
-            PublisherEvents.REACHED_FOOD: self._increase_score,
+            PublisherEvents.REACHED_FOOD: self._increase_remuneration,
         }
 
-    def _increase_score(self) -> None:
-        self._state["score"] += 1
+    def _increase_remuneration(self) -> None:
+        self._remuneration["score"] += 1
 
     def _get_handler_for_event(self, event: PublisherEvents) -> Callable:
         return self._subscribed_events[event]
 
 
 class RewardSubscriber(AbstractSubscriber):
-    def __init__(self, state: Dict[str, int]):
-        self._state = state
+    def __init__(self, remuneration: Dict[str, int]):
+        self._remuneration = remuneration
 
     def get_notified(self, event: PublisherEvents) -> None:
         if self._subscribed(event):
@@ -59,11 +59,11 @@ class RewardSubscriber(AbstractSubscriber):
         }
 
     def _increase_score_and_reward(self) -> None:
-        self._state["score"] += 1
-        self._state["reward"] += 50
+        self._remuneration["score"] += 1
+        self._remuneration["reward"] += 50
 
     def _decrease_reward(self) -> None:
-        self._state["reward"] -= 10
+        self._remuneration["reward"] -= 10
 
     def _get_handler_for_event(self, event: PublisherEvents) -> Callable:
         return self._subscribed_events[event]

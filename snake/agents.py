@@ -40,18 +40,18 @@ class UserAgent(AbstractAgent):
         self._game_factory = game_factory
         self._game = self._game_factory.create_snake_game()
 
-        self._state = self._initial_state
+        self._remuneration = self._initial_remuneration
         self._register_subscriber(self._initial_subscribers)
 
         self._event_handler = PygameEventHandler()
 
     @property
-    def _initial_state(self) -> Dict[str, int]:
+    def _initial_remuneration(self) -> Dict[str, int]:
         return {"score": 0}
 
     @property
     def _initial_subscribers(self) -> List[AbstractSubscriber]:
-        return [ScoreSubscriber(state=self._state)]
+        return [ScoreSubscriber(remuneration=self._remuneration)]
 
     def _register_subscriber(self, subscribers: List[AbstractSubscriber]) -> None:
         for subscriber in subscribers:
@@ -83,7 +83,7 @@ class UserAgent(AbstractAgent):
 
     def restart_game(self) -> None:
         self._game = self._game_factory.create_snake_game()
-        self._state = self._initial_state
+        self._remuneration = self._initial_remuneration
         self._register_subscriber(self._initial_subscribers)
 
     @property
@@ -101,7 +101,7 @@ class UserAgent(AbstractAgent):
         return self._game.get_snake()
 
     def get_score(self) -> int:
-        return self._state["score"]
+        return self._remuneration["score"]
 
 
 class AIAgent(AbstractAgent):
@@ -109,18 +109,18 @@ class AIAgent(AbstractAgent):
         self._game_factory = game_factory
         self._game = self._game_factory.create_snake_game()
 
-        self._state = self._initial_state
+        self._remuneration = self._initial_remuneration
         self._register_subscriber(self._initial_subscribers)
 
         self._event_handler = PygameEventHandler()
 
     @property
-    def _initial_state(self) -> Dict[str, int]:
+    def _initial_remuneration(self) -> Dict[str, int]:
         return {"score": 0, "reward": 0}
 
     @property
     def _initial_subscribers(self) -> List[AbstractSubscriber]:
-        return [ScoreSubscriber(state=self._state), RewardSubscriber(state=self._state)]
+        return [ScoreSubscriber(remuneration=self._remuneration), RewardSubscriber(remuneration=self._remuneration)]
 
     def _register_subscriber(self, subscribers: List[AbstractSubscriber]) -> None:
         for subscriber in subscribers:
@@ -161,7 +161,7 @@ class AIAgent(AbstractAgent):
 
     def restart_game(self) -> None:
         self._game = self._game_factory.create_snake_game()
-        self._state = self._initial_state
+        self._remuneration = self._initial_remuneration
         self._register_subscriber(self._initial_subscribers)
 
     @property
@@ -172,7 +172,7 @@ class AIAgent(AbstractAgent):
         return self._game.get_snake()
 
     def get_score(self) -> int:
-        return self._state["score"]
+        return self._remuneration["score"]
 
     def get_reward(self) -> int:
-        return self._state["reward"]
+        return self._remuneration["reward"]
