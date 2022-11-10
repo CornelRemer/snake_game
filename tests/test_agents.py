@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from snake.agents import Actions, AIAgent, UserAgent
+from snake.agents import Actions, AIAgentFactory, UserAgent
 from snake.config import GameConfig, WindowConfig
 from snake.game import SnakeGameFactory
 from snake.game_controls import AbstractEventHandler, Direction
@@ -210,6 +210,11 @@ class TestUserAgent:
             assert not agent.wants_to_play()
 
 
+@pytest.fixture(name="ai_agent_factory")
+def fixture_ai_agent_factory(window_config: WindowConfig, game_config: GameConfig) -> AIAgentFactory:
+    return AIAgentFactory(window_configuration=window_config, game_configuration=game_config)
+
+
 @patch("snake.game.GameUI")
 class TestAIAgent:
     # pylint: disable=too-many-arguments
@@ -217,13 +222,13 @@ class TestAIAgent:
         self,
         _,
         fake_event_handler: FakeEventHandler,
-        snake_game_factory: SnakeGameFactory,
+        ai_agent_factory: AIAgentFactory,
     ):
         fake_event = [FakeEvents.QUIT]
         fake_event_handler.add_test_events(fake_event)
 
         with patch("snake.agents.PygameEventHandler", return_value=fake_event_handler):
-            agent = AIAgent(game_factory=snake_game_factory)
+            agent = ai_agent_factory.create_agent()
             agent.play_game()
 
             assert not agent.wants_to_play()
@@ -240,23 +245,23 @@ class TestAIAgent:
         _,
         game_is_over: bool,
         expected_answer: bool,
-        snake_game_factory: SnakeGameFactory,
+        ai_agent_factory: AIAgentFactory,
     ):
         with patch("snake.agents.SnakeGame.is_over", return_value=game_is_over):
-            agent = AIAgent(game_factory=snake_game_factory)
+            agent = ai_agent_factory.create_agent()
 
             assert agent.wants_to_play() == expected_answer
 
     def test_restart_game_gets_called_if_agent_wants_to_play_again(
         self,
         _,
-        snake_game_factory: SnakeGameFactory,
+        ai_agent_factory: AIAgentFactory,
     ):
         with (
             patch("snake.agents.SnakeGame.is_over", return_value=True),
             patch("snake.agents.AIAgent.restart_game") as mocked_restart_game,
         ):
-            agent = AIAgent(game_factory=snake_game_factory)
+            agent = ai_agent_factory.create_agent()
             agent.play_game()
 
             assert agent.wants_to_play()
@@ -265,10 +270,10 @@ class TestAIAgent:
     def test_reset_game_creates_new_game_instance(
         self,
         _,
-        snake_game_factory: SnakeGameFactory,
+        ai_agent_factory: AIAgentFactory,
     ):
         with patch("snake.agents.SnakeGameFactory.create_snake_game") as mocked_create_snake_game:
-            agent = AIAgent(game_factory=snake_game_factory)
+            agent = ai_agent_factory.create_agent()
             agent.restart_game()
 
             assert mocked_create_snake_game.call_count == 2
@@ -293,10 +298,10 @@ class TestAIAgent:
         action: Actions,
         new_direction: Direction,
         expected_snake: List[Point],
-        snake_game_factory: SnakeGameFactory,
+        ai_agent_factory: AIAgentFactory,
     ):
         with patch("snake.agents.AIAgent._get_actions", return_value=action):
-            agent = AIAgent(game_factory=snake_game_factory)
+            agent = ai_agent_factory.create_agent()
             assert agent.game.get_current_direction() == Direction.RIGHT
             agent.play_game()
             assert agent.game.get_current_direction() == new_direction
@@ -306,10 +311,10 @@ class TestAIAgent:
     def test_run_snake_movement_for_multiple_inputs(
         self,
         _,
-        snake_game_factory: SnakeGameFactory,
+        ai_agent_factory: AIAgentFactory,
     ):
         actions = [Actions.STRAIGHT, Actions.RIGHT_TURN, Actions.STRAIGHT, Actions.LEFT_TURN, Actions.STRAIGHT]
-        agent = AIAgent(game_factory=snake_game_factory)
+        agent = ai_agent_factory.create_agent()
 
         for action in actions:
             with patch("snake.agents.AIAgent._get_actions", return_value=action):

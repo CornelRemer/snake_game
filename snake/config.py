@@ -57,7 +57,7 @@ class GameConfig:
         "inner_block_color", is_type_of=str, is_in=RGBColorCode.get_color_names(), default="LIGHTBLUE"
     )
     FOOD_COLOR_VALIDATOR = Validator("food_color", is_type_of=str, is_in=RGBColorCode.get_color_names(), default="RED")
-    AGENT_TYPE_VALIDATOR = Validator("agent_type", is_type_of=str, is_in=["USER", "AI"], default="AI")
+    AGENT_TYPE_VALIDATOR = Validator("agent_type", is_type_of=str, is_in=["UserAgent", "AIAgent"], default="AIAgent")
 
     frame_rate: int
     start_length: int

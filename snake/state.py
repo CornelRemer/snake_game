@@ -73,3 +73,11 @@ class State:
             food_position.y < snake_head.y,  # Food is above the snakes head
             food_position.y > snake_head.y,  # Food is below the snakes head
         ]
+
+
+class StateFactory:
+    def __init__(self, game_configuration: GameConfig):
+        self._game_config = game_configuration
+
+    def create_state_for_game(self, game: SnakeGame) -> State:
+        return State(game=game, game_config=self._game_config)

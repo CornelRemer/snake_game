@@ -1,20 +1,31 @@
 import random
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Dict, List
+from typing import Dict, List, Optional, cast
 
 import numpy as np
 
+from snake.config import GameConfig, WindowConfig
 from snake.game import SnakeGame, SnakeGameFactory
 from snake.game_controls import Direction, PygameEventHandler
 from snake.game_objects.objects import Point
 from snake.publisher import AbstractSubscriber, RewardSubscriber, ScoreSubscriber
+from snake.state import StateFactory
 
 
 class Actions(Enum):
     STRAIGHT = [1, 0, 0]
     RIGHT_TURN = [0, 1, 0]
     LEFT_TURN = [0, 0, 1]
+
+
+class Agents(Enum):
+    UserAgent = "UserAgent"
+    AIAgent = "AIAgent"
+
+    @classmethod
+    def get_agent_names(cls) -> List[str]:
+        return [color.name for color in cls]
 
 
 class AbstractAgent(ABC):
@@ -105,7 +116,7 @@ class UserAgent(AbstractAgent):
 
 
 class AIAgent(AbstractAgent):
-    def __init__(self, game_factory: SnakeGameFactory):
+    def __init__(self, game_factory: SnakeGameFactory, state_factory: StateFactory):
         self._game_factory = game_factory
         self._game = self._game_factory.create_snake_game()
 
@@ -113,6 +124,7 @@ class AIAgent(AbstractAgent):
         self._register_subscriber(self._initial_subscribers)
 
         self._event_handler = PygameEventHandler()
+        self._state = state_factory.create_state_for_game(game=self._game)
 
     @property
     def _initial_remuneration(self) -> Dict[str, int]:
@@ -176,3 +188,53 @@ class AIAgent(AbstractAgent):
 
     def get_reward(self) -> int:
         return self._remuneration["reward"]
+
+
+class AgentFactory(ABC):
+    def __init__(self, window_configuration: WindowConfig, game_configuration: GameConfig):
+        self._window_config = window_configuration
+        self._game_config = game_configuration
+
+    @abstractmethod
+    def create_agent(self) -> AbstractAgent:
+        pass
+
+
+class AbstractAgentFactory(AgentFactory):
+    def __init__(
+        self, window_configuration: WindowConfig, game_configuration: GameConfig, agent_type: Optional[Agents] = None
+    ):
+        self._agent_type = agent_type or Agents(game_configuration.agent_type)
+        super().__init__(window_configuration=window_configuration, game_configuration=game_configuration)
+
+    def create_agent(self) -> AbstractAgent:
+        return cast(
+            AbstractAgent,
+            self._available_agents[self._agent_type](
+                window_configuration=self._window_config, game_configuration=self._game_config
+            ).create_agent(),
+        )
+
+    @property
+    def _available_agents(self) -> Dict:
+        return {
+            Agents.UserAgent: UserAgentFactory,
+            Agents.AIAgent: AIAgentFactory,
+        }
+
+
+class UserAgentFactory(AgentFactory):
+    def create_agent(self) -> UserAgent:
+        return UserAgent(
+            SnakeGameFactory(window_configuration=self._window_config, game_configuration=self._game_config)
+        )
+
+
+class AIAgentFactory(AgentFactory):
+    def create_agent(self) -> AIAgent:
+        return AIAgent(
+            game_factory=SnakeGameFactory(
+                window_configuration=self._window_config, game_configuration=self._game_config
+            ),
+            state_factory=StateFactory(game_configuration=self._game_config),
+        )
