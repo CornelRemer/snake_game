@@ -140,14 +140,19 @@ class AIAgent(AbstractAgent):
 
     def play_game(self) -> None:
         self._event_handler.handle_events()
+        old_state = self._state.calculate_state_from_game()
         action = self._get_actions()
         new_direction = self._convert_actions_to_directions(action)
         self._game.update_direction(new_direction)
         self._game.run()
+        new_state = self._state.calculate_state_from_game()
+        reward = self.get_reward()
+        game_over = self._game.is_over()
 
     @staticmethod
     def _get_actions() -> Actions:
-        # get actions from model
+        # state = torch.tensor(state, dtype=torch.float)
+        # get actions from model by calling self._model(state)
         return random.choice([Actions.STRAIGHT, Actions.RIGHT_TURN, Actions.LEFT_TURN])
 
     def _convert_actions_to_directions(self, action: Actions) -> Direction:
