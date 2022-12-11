@@ -1,6 +1,7 @@
 from typing import List
 from unittest.mock import Mock, patch
 
+import numpy as np
 import pytest
 
 from snake.config import GameConfig
@@ -155,5 +156,5 @@ class TestState:
             state = State(game=snake_game, game_config=game_config)
             actual_state = state.calculate_state_from_game()
 
-        assert actual_state == expected_state
+        assert np.array_equal(actual_state, expected_state)
         assert len(actual_state) == 11

@@ -247,7 +247,10 @@ class TestAIAgent:
         expected_answer: bool,
         ai_agent_factory: AIAgentFactory,
     ):
-        with patch("snake.agents.SnakeGame.is_over", return_value=game_is_over):
+        with (
+            patch("snake.agents.SnakeGame.is_over", return_value=game_is_over),
+            patch("snake.agents.AIAgent._train_long_memory"),
+        ):
             agent = ai_agent_factory.create_agent()
 
             assert agent.wants_to_play() == expected_answer

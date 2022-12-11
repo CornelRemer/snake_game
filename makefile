@@ -27,7 +27,7 @@ isort:    ## static analysis for isort
 	poetry run isort .
 
 mypy:    ## static analysis for mypy
-	poetry run mypy --config-file config/mypy/mypy.ini .
+	poetry run mypy --config-file config/mypy/mypy.ini . --no-incremental
 
 pylint:    ## static analysis for pylint
 	poetry run pylint --rcfile config/pylint/pylint.ini main.py snake tests

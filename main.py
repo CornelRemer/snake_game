@@ -19,5 +19,5 @@ if __name__ == "__main__":
         while agent.wants_to_play():
             agent.play_game()
 
-        score = agent.get_score()
-        print("Score", score)
+        score = agent.get_max_score()
+        print("Max score", score)

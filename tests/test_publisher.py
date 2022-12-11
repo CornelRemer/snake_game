@@ -45,7 +45,7 @@ class TestRewardSubscriber:
     @pytest.mark.parametrize(
         "event, expected_remuneration",
         (
-            (PublisherEvents.REACHED_FOOD, {"score": 1, "reward": 50}),
+            (PublisherEvents.REACHED_FOOD, {"score": 0, "reward": 10}),
             (PublisherEvents.COLLISION_DETECTED, {"score": 0, "reward": -10}),
         ),
     )

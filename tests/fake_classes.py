@@ -1,4 +1,4 @@
-from typing import List
+from typing import Callable, Dict, List
 
 from snake.publisher import AbstractPublisher, AbstractSubscriber, PublisherEvents
 
@@ -29,6 +29,10 @@ class FakeSubscriber(AbstractSubscriber):
 
     def get_notified(self, event: PublisherEvents) -> None:
         self._received_events.append(event)
+
+    @property
+    def _subscribed_events(self) -> Dict[PublisherEvents, Callable]:
+        pass
 
     @property
     def received_notifications(self) -> List[PublisherEvents]:

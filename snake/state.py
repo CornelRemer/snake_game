@@ -1,5 +1,7 @@
 from typing import List
 
+import numpy as np
+
 from snake.collision_checker import CollisionChecker
 from snake.config import GameConfig
 from snake.game import SnakeGame
@@ -23,7 +25,7 @@ class State:
         direction = self.convert_direction_to_binary()
         food_position = self.calculate_current_food_position_relative_to_snake_as_binary()
 
-        return hazards + direction + food_position
+        return np.array(hazards + direction + food_position, dtype=int)
 
     # ToDo: refactor
     def calculate_location_of_hazard_as_binary(self) -> List[int]:

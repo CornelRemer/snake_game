@@ -1,4 +1,4 @@
-frame_rate = 18
+frame_rate = 30
 start_length = 2
 outer_block_size = 20
 inner_block_size = 18
@@ -6,3 +6,4 @@ outer_block_color = "DARKGREY"
 inner_block_color = "GREEN"
 food_color = "RED"
 agent_type = "AIAgent"
+#agent_type = "UserAgent"

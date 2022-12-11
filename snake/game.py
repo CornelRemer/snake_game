@@ -58,6 +58,7 @@ class SnakeGame:
         self._check_max_game_iteration()
         self._move_snake_and_check_for_collision()
         self._handle_snake_reached_food()
+        self._reset_reward_if_needed()
         self._update_ui()
 
     def _check_max_game_iteration(self) -> None:
@@ -89,6 +90,7 @@ class SnakeGame:
         if self._snake_reached_food():
             self._score += 1
             self._extend_snake_and_place_new_food()
+            self.reset_game_iteration_count()
             self._publisher.publish_one_event(PublisherEvents.REACHED_FOOD)
 
     def _snake_reached_food(self) -> bool:
@@ -97,6 +99,9 @@ class SnakeGame:
     def _extend_snake_and_place_new_food(self) -> None:
         self._snake_handler.extend_snake(self._food_handler.get_current_food_position())
         self._place_new_food()
+
+    def reset_game_iteration_count(self) -> None:
+        self._game_iteration_count = 0
 
     @retry(retry=retry_if_exception_type(FoodPlacedInSnakeException), stop=stop_after_attempt(100))
     def _place_new_food(self) -> None:
@@ -111,6 +116,10 @@ class SnakeGame:
 
     def _food_is_located_in_snake(self) -> bool:
         return self._food_handler.get_current_food_position() in self._snake_handler.get_snake()
+
+    def _reset_reward_if_needed(self):
+        if not (self._snake_reached_food() or self.collision_detected()):
+            self._publisher.publish_one_event(PublisherEvents.NO_COLLISION)
 
     def _update_ui(self) -> None:
         self._ui.update_snake_food_and_text(score=self._score)

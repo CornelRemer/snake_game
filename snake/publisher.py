@@ -6,18 +6,10 @@ from typing import Callable, Dict, List
 class PublisherEvents(Enum):
     COLLISION_DETECTED = auto()
     REACHED_FOOD = auto()
+    NO_COLLISION = auto()
 
 
 class AbstractSubscriber(ABC):
-    @abstractmethod
-    def get_notified(self, event: PublisherEvents) -> None:
-        pass
-
-
-class ScoreSubscriber(AbstractSubscriber):
-    def __init__(self, remuneration: Dict[str, int]):
-        self._remuneration = remuneration
-
     def get_notified(self, event: PublisherEvents) -> None:
         if self._subscribed(event):
             handler = self._get_handler_for_event(event)
@@ -25,6 +17,19 @@ class ScoreSubscriber(AbstractSubscriber):
 
     def _subscribed(self, event: PublisherEvents) -> bool:
         return event in self._subscribed_events
+
+    @property
+    @abstractmethod
+    def _subscribed_events(self) -> Dict[PublisherEvents, Callable]:
+        pass
+
+    def _get_handler_for_event(self, event: PublisherEvents) -> Callable:
+        return self._subscribed_events[event]
+
+
+class ScoreSubscriber(AbstractSubscriber):
+    def __init__(self, remuneration: Dict[str, int]):
+        self._remuneration = remuneration
 
     @property
     def _subscribed_events(self) -> Dict[PublisherEvents, Callable]:
@@ -35,38 +40,37 @@ class ScoreSubscriber(AbstractSubscriber):
     def _increase_remuneration(self) -> None:
         self._remuneration["score"] += 1
 
-    def _get_handler_for_event(self, event: PublisherEvents) -> Callable:
-        return self._subscribed_events[event]
-
 
 class RewardSubscriber(AbstractSubscriber):
     def __init__(self, remuneration: Dict[str, int]):
         self._remuneration = remuneration
 
-    def get_notified(self, event: PublisherEvents) -> None:
-        if self._subscribed(event):
-            handler = self._get_handler_for_event(event)
-            handler()
+    @property
+    def _subscribed_events(self) -> Dict[PublisherEvents, Callable]:
+        return {
+            PublisherEvents.REACHED_FOOD: self._increase_reward,
+            PublisherEvents.COLLISION_DETECTED: self._decrease_reward,
+        }
 
-    def _subscribed(self, event: PublisherEvents) -> bool:
-        return event in self._subscribed_events
+    def _increase_reward(self) -> None:
+        self._remuneration["reward"] = 10
+
+    def _decrease_reward(self) -> None:
+        self._remuneration["reward"] = -10
+
+
+class NoCollisionSubscriber(AbstractSubscriber):
+    def __init__(self, remuneration: Dict[str, int]):
+        self._remuneration = remuneration
 
     @property
     def _subscribed_events(self) -> Dict[PublisherEvents, Callable]:
         return {
-            PublisherEvents.REACHED_FOOD: self._increase_score_and_reward,
-            PublisherEvents.COLLISION_DETECTED: self._decrease_reward,
+            PublisherEvents.NO_COLLISION: self._reset_reward,
         }
 
-    def _increase_score_and_reward(self) -> None:
-        self._remuneration["score"] += 1
-        self._remuneration["reward"] += 50
-
-    def _decrease_reward(self) -> None:
-        self._remuneration["reward"] -= 10
-
-    def _get_handler_for_event(self, event: PublisherEvents) -> Callable:
-        return self._subscribed_events[event]
+    def _reset_reward(self) -> None:
+        self._remuneration["reward"] = 0
 
 
 class AbstractPublisher(ABC):
